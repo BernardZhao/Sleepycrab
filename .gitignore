@@ -1,0 +1,13 @@
+# Secrets — never commit
+.env
+secrets/
+
+# Application state (databases, API keys, caches) — lives on the host only
+configs/
+letsencrypt/
+
+# Backups and scratch
+*.bak
+*.old
+*.pre-*
+backups/
