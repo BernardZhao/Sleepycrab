@@ -88,6 +88,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./scripts/pf-sync.sh:/pf-sync.sh:ro
+    labels:
+      - "wud.trigger.docker.autoupdate.enabled=false"
     networks:
       default:
         aliases:
@@ -134,14 +136,28 @@ services:
       - "traefik.http.routers.overseerr-rtr-secure.service=overseerr-svc"
       - "traefik.http.services.overseerr-svc.loadbalancer.server.port=5055"
 
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    restart: unless-stopped
+  wud:
+    image: getwud/wud
+    container_name: wud
     environment:
-      - WATCHTOWER_CLEANUP=true
+      - TZ=America/Los_Angeles
+      - WUD_AUTH_ADMIN_USER=admin
+      - WUD_AUTH_ADMIN_PASSWORD=${WUD_ADMIN_PASSWORD}
+      - WUD_WATCHER_LOCAL_WATCHDIGEST=true
+      - WUD_TRIGGER_DOCKER_AUTOUPDATE_AUTO=true
+      - WUD_TRIGGER_DOCKER_AUTOUPDATE_THRESHOLD=minor
+      - WUD_TRIGGER_DOCKER_AUTOUPDATE_PRUNE=true
+      - WUD_TRIGGER_NTFY_ALERT_AUTO=true
+      - WUD_TRIGGER_NTFY_ALERT_THRESHOLD=major-only
+      - WUD_TRIGGER_NTFY_ALERT_URL=http://ntfy
+      - WUD_TRIGGER_NTFY_ALERT_TOPIC=homeserver
+      - WUD_TRIGGER_NTFY_ALERT_AUTH_TOKEN=${WUD_NTFY_TOKEN}
+    ports:
+      - 3000:3000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./configs/wud:/store
+    restart: unless-stopped
 
   traefik:
     image: 'traefik:v3'

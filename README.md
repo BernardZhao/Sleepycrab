@@ -1,7 +1,7 @@
 # sleepycrab
 
 Docker Compose stack for the sleepycrab homeserver media box
-(Proxmox CT 900 "plex", 10.0.0.11). This repo is the stack *definition* —
+(Proxmox CT 902 "plex", 10.0.0.11). This repo is the stack *definition* —
 application state is deliberately not versioned (see "What's not in here").
 
 ## Services
@@ -18,7 +18,7 @@ application state is deliberately not versioned (see "What's not in here").
 | traefik | traefik:v3 | Reverse proxy; expects the compose network to be named `sleepycrab_default` (pinned in the compose file). |
 | tunnel | cloudflare/cloudflared | Cloudflare Tunnel; token from `.env`. |
 | ntfy | binwiederhier/ntfy | Alert server (host port 8081). |
-| watchtower | containrrr/watchtower | Auto-updates images (with cleanup). Images are intentionally unpinned — watchtower is the update mechanism. |
+| wud | getwud/wud | What's Up Docker — auto-applies patch+minor image updates (with prune); major bumps only send an ntfy alert to the `homeserver` topic. gluetun is excluded from auto-update via label (its network namespace is shared). Images are intentionally unpinned — WUD is the update mechanism. UI on port 3000 (login required). |
 
 ## Port forwarding (Proton NAT-PMP)
 
@@ -33,12 +33,15 @@ so transmission's peer port must follow gluetun automatically:
 
 ## Secrets
 
-No secrets are committed. The compose file reads two values from `.env`
+No secrets are committed. The compose file reads these values from `.env`
 (copy `.env.example`):
 
 - `WIREGUARD_PRIVATE_KEY` — Proton WireGuard key (full generated config is
   kept on the host at `/root/secrets/wg0.conf`).
 - `TUNNEL_TOKEN` — Cloudflare Tunnel token.
+- `WUD_NTFY_TOKEN` — ntfy access token for WUD's major-update alerts
+  (dedicated write-only ntfy user `wud`, topic `homeserver`).
+- `WUD_ADMIN_PASSWORD` — WUD web UI admin password (user `admin`).
 
 ## Host requirements
 
@@ -53,7 +56,7 @@ No secrets are committed. The compose file reads two values from `.env`
 ## Deploy
 
 ```sh
-cp .env.example .env   # fill in the two secrets
+cp .env.example .env   # fill in the secrets
 docker-compose up -d
 ```
 
